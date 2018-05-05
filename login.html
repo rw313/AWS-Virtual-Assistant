@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<head>
+	<!-- EVERYTHING BELOW IS NOT MY WORK. IT IS ATTRIBUTED TO https://codepen.io/shivapandey/pen/dWdRYM?q=chat%20ui&order=popularity&depth=everything&show_forks=false --> 
+	
+	<title>Chat App</title>  
+	<script src="aws-amplify-master\packages\amazon-cognito-identity-js\dist\aws-cognito-sdk.min.js"></script> 
+	<script src="aws-amplify-master\packages\amazon-cognito-identity-js\dist\amazon-cognito-identity.min.js"></script>
+	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.201.0.min.js"></script>  
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"> 
+</head>
+<body class="container" > 
+	<div id="center-text">
+		<h2>Log In </h2>
+		<p>UI from codepen</p>
+		<p>If you do not have an account, please sign up at the /signup.html page</p> 
+	</div> 
+	<div id="body"> 
+	   <form action="#" id="login"> 
+				<label for="username">Username: </label>
+				<input id="username" name="username" type="text" value="usertest1" required/>
+				<br/><hr>
+				<label for="password">Password: </label>
+				<input id="password" name="password" type="password" value="password" required /> 
+				
+				<hr/>
+				<input type="submit" value="Submit"  /> 
+	   </form>
+	   
+	   <div id="status"></div>
+	</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script> 
+
+
+<script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
+<script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
+<script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
+<script type="text/javascript" src="lib/CryptoJS/components/hmac.js"></script>
+<script type="text/javascript" src="lib/CryptoJS/components/enc-base64.js"></script>
+<script type="text/javascript" src="lib/url-template/url-template.js"></script>
+<script type="text/javascript" src="lib/apiGatewayCore/sigV4Client.js"></script>
+<script type="text/javascript" src="lib/apiGatewayCore/apiGatewayClient.js"></script>
+<script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
+<script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script> 
+<script type="text/javascript" src="apigClient.js"></script> 
+
+
+<script> 
+var idpoolid = 'us-east-2:1ca556e5-c821-4598-be84-3540ef89764d'; 
+var userpoolid = 'us-east-2_ortRoFV5S';
+var clientid = '1r2t55rcmpmni754h9v67hcvsj';  
+var endpt = 'https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ortRoFV5S'; 
+
+AWS.config.region = 'us-east-2';
+AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+    IdentityPoolId: 'us-east-2:1ca556e5-c821-4598-be84-3540ef89764d',
+});
+
+AWSCognito.config.region= 'us-east-2'; 
+
+$(function() { //shorthand document.ready function 
+	$('#login').on('submit', function(e) { 
+        e.preventDefault();  //prevent form from submitting
+		var authenticationData = {
+			Username : $('#username').val(),
+			Password : $('#password').val(),
+		};
+		var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+		var poolData = {
+			UserPoolId : userpoolid,  
+			ClientId : clientid,
+			endpoint : endpt  
+		};
+		var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+		var userData = {
+			Username : $('#username').val(),
+			Pool : userPool
+		};
+		var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+		cognitoUser.authenticateUser(authenticationDetails, {
+			onSuccess: function (result) {
+				console.log('access token + ' + result.getAccessToken().getJwtToken()); 
+				AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+					IdentityPoolId : idpoolid,  
+					Logins : { 
+						'cognito-idp.us-east-2.amazonaws.com/us-east-2_ortRoFV5S' : result.getIdToken().getJwtToken()
+					}
+				});
+
+				//refreshes credentials using AWS.CognitoIdentity.getCredentialsForIdentity()
+				AWS.config.credentials.refresh((error) => {
+					if (error) {
+						 console.error(error);
+					} else {
+						 // Instantiate aws sdk service objects now that the credentials have been updated.
+						 // example: var s3 = new AWS.S3();
+						 
+						 console.log('Successfully logged in!');
+						 $('#status').html("Success. Go to home page: <a href='/index.html'>here</a>");
+						 
+						 
+						 console.log(AWS.config.credentials.accessKeyId); 
+						console.log(AWS.config.credentials.secretAccessKey);
+						console.log(AWS.config.credentials.sessionToken)
+						
+						var params = { 
+						  // The key is the parameter name, as it is defined in the API in API Gateway.
+						  param0: '',
+						  param1: ''
+						};
+
+						var body = {
+						  "messages": {
+							"Message": {
+								"type":"string", 
+								"unstructured": {
+									"id":"5",
+									"text":"hi there",
+									"timestamp": "02-22-2018 03:09:00PM" 
+								}} 
+						  } 
+						};
+
+						var additionalParams = { 
+						  headers: { },
+						  queryParams: {
+							param0: 'c'
+						  }
+						};
+						var apigClient = apigClientFactory.newClient( { 
+							accessKey: AWS.config.credentials.accessKeyId, 
+							secretKey: AWS.config.credentials.secretAccessKey,
+							sessionToken: AWS.config.credentials.sessionToken, 
+							region: 'us-east-2' 
+							//apiKey: 'T2Vze1JGGS7Kgg86l496m9KgV0jT1wJX65wHuDuh', 
+						}  ); 
+						apigClient.chatbotPost(params, body, additionalParams)
+							.then(function(result){
+								console.log("HERE IS THE RESULT:");
+								console.log(result); 
+							}).catch( function(result){
+								console.log("ERROR: ");
+								console.log(result); 
+							  // Add error callback code here.
+							});  
+					}
+				});
+			},
+
+			onFailure: function(err) {
+				alert(err);
+			},
+
+		});
+	}); 
+	
+}); 
+	
+</script> 
+
+
+</body>

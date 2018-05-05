@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<head>
+	<!-- EVERYTHING BELOW IS NOT MY WORK. IT IS ATTRIBUTED TO https://codepen.io/shivapandey/pen/dWdRYM?q=chat%20ui&order=popularity&depth=everything&show_forks=false --> 
+	
+	<title>Chat App</title>  
+	<script src="aws-amplify-master\packages\amazon-cognito-identity-js\dist\aws-cognito-sdk.min.js"></script>
+	<!--<script src="amazon-cognito-js-master/dist/amazon-cognito.min.js"></script>-->
+	<script src="aws-amplify-master\packages\amazon-cognito-identity-js\dist\amazon-cognito-identity.min.js"></script>
+	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.201.0.min.js"></script> 
+  
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"> </head>
+<body class="container" > 
+	<div id="center-text">
+		<h2>Log In </h2>
+		<p>UI from codepen</p>
+	</div> 
+	<div id="body"> 
+	   <form action="#" id="signup">
+				<label for="email">Email: </label> 
+				<input id="email" name="email" type="text" value="rachelwu313@gmail.com" required/>
+				
+				<br/><hr>
+				<label for="username">Username: </label>
+				<input id="username" name="username" type="text" value="usertest1" required/>
+				
+				<br/><hr>
+				<label for="password">Password: </label>
+				<input id="password" name="password" type="password" value="password" required /> 
+				
+				<hr/>
+				<input type="submit" value="Submit"  /> 
+	   </form>
+	   <div id="verify" style="display:none;">
+			<form action="#" id="verifyform">
+				<label for="code">Code: </label> 
+				<input id="code" name="code" type="text" required/> 
+				<hr/>
+				<input type="submit" value="Submit"   /> 
+			</form>
+	   </div>
+	   <div id="status"></div>
+	</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script> 
+<script> 
+var idpoolid = 'us-east-2:1ca556e5-c821-4598-be84-3540ef89764d'; 
+var userpoolid = 'us-east-2_ortRoFV5S';
+var clientid = '1r2t55rcmpmni754h9v67hcvsj';  
+
+AWS.config.region = 'us-east-2';
+AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+    IdentityPoolId: 'us-east-2:1ca556e5-c821-4598-be84-3540ef89764d',
+});
+
+AWSCognito.config.region= 'us-east-2'; 
+AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
+    IdentityPoolId: 'us-east-2:1ca556e5-c821-4598-be84-3540ef89764d',
+});
+
+
+var poolData = {
+	UserPoolId : 'us-east-2_ortRoFV5S',  
+	ClientId : '1r2t55rcmpmni754h9v67hcvsj',
+	endpoint: 'https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ortRoFV5S'
+};
+
+var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData); 
+
+var attributeList = [];
+
+$(function() { //shorthand document.ready function
+    $('#signup').on('submit', function(e) {  
+        e.preventDefault();  //prevent form from submitting
+        var dataEmail = {
+			Name : 'email',
+			Value : $('#email').val()
+		}; 
+		var attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute(dataEmail); 
+		attributeList.push(attributeEmail); 
+		
+		userPool.signUp($('#username').val(), $('#password').val(), attributeList, null, function(err, result){
+			if (err) {
+				alert(err);
+				console.log(err); 
+				return;
+			}
+			cognitoUser = result.user;
+			console.log('user name is ' + cognitoUser.getUsername());
+			
+			var str = ""; 
+			$('#verify').css("display", "block"); 
+			$('#signup').css("display", "none"); 
+			
+		});
+
+    });
+	
+	$('#verifyform').on('submit', function(e) {
+		
+        e.preventDefault();  //prevent form from submitting
+		var userData = {
+			Username : $('#username').val(),
+			Pool : userPool
+		};
+
+		var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+		cognitoUser.confirmRegistration($('#code').val(), true, function(err, result) {
+			if (err) {
+				alert(err);
+				return;
+			}
+			console.log('call result: ' + result); 
+			if (result === "SUCCESS") {
+				result += ". Please <a href='http://assistantcat.s3-website.us-east-2.amazonaws.com/login.html'>log in here</a>"; 
+				$('#status').html(result);
+			} else {
+				$('#status').html(result);
+			}
+		});
+	}); 
+	
+}); 
+
+</script> 
+
+
+</body>

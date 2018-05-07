@@ -16,7 +16,7 @@ def getUsers():
     
     for row in rows:  
         user = dict()
-        user["useriD"] = str(row[0]) 
+        user["userID"] = str(row[0]) 
         user["email"] = row[1]
         user["firstname"] = row[2]
         user["lastname"] = row[3] 
@@ -56,11 +56,11 @@ def lambda_handler(event, context):
                             },
                     'firstname': {
                                 'DataType': 'String',
-                                'StringValue': email
+                                'StringValue': firstname
                             },
                     'lastname': {
                         'DataType': 'String',
-                        'StringValue': email
+                        'StringValue': firstname
                     },
                     'userID': {
                         'DataType': 'String',

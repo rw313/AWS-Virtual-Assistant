@@ -14,11 +14,12 @@ def lambda_handler(event, context):
     firstname = slots['firstname']
     lastname = slots['lastname']
     email = slots['email']  
+    username = slots['username']
     
-    values = ", ".join(['"'+s+'"' for s in [firstname, lastname, email] ])
+    values = ", ".join(['"'+s+'"' for s in [firstname, lastname, email, username] ])
     
     with conn.cursor() as cur:
-        cur.execute('Insert into Users (firstname, lastname, email) values ('+values+')')
+        cur.execute('Insert into Users (firstname, lastname, email, username) values ('+values+')')
         conn.commit()  
         print("USER ID IN RDS: " + str(cur.lastrowid))
     

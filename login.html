@@ -99,52 +99,45 @@ $(function() { //shorthand document.ready function
 						 // example: var s3 = new AWS.S3();
 						 
 						 console.log('Successfully logged in!');
-						 $('#status').html("Success. Go to home page: <a href='/index.html'>here</a>");
-						 
-						 
-						 console.log(AWS.config.credentials.accessKeyId); 
-						console.log(AWS.config.credentials.secretAccessKey);
-						console.log(AWS.config.credentials.sessionToken)
+						 $('#status').html("Success. Go to home page: <a href='/app.html'>here</a>");
 						
-						var params = { 
-						  // The key is the parameter name, as it is defined in the API in API Gateway.
-						  param0: '',
-						  param1: ''
-						};
-
-						var body = {
-						  "messages": {
-							"Message": {
-								"type":"string", 
-								"unstructured": {
-									"id":"5",
-									"text":"hi there",
-									"timestamp": "02-22-2018 03:09:00PM" 
-								}} 
-						  } 
-						};
-
-						var additionalParams = { 
-						  headers: { },
-						  queryParams: {
-							param0: 'c'
-						  }
-						};
+						//going to fetch RDS user id 
 						var apigClient = apigClientFactory.newClient( { 
 							accessKey: AWS.config.credentials.accessKeyId, 
 							secretKey: AWS.config.credentials.secretAccessKey,
 							sessionToken: AWS.config.credentials.sessionToken, 
-							region: 'us-east-2' 
-							//apiKey: 'T2Vze1JGGS7Kgg86l496m9KgV0jT1wJX65wHuDuh', 
+							region: 'us-east-2'   
 						}  ); 
-						apigClient.chatbotPost(params, body, additionalParams)
-							.then(function(result){
-								console.log("HERE IS THE RESULT:");
-								console.log(result); 
+						
+						var body = {  "messages": [ 
+										{ 
+											"unstructured": {
+												"id": "1", 
+												"text":{"username": cognitoUser.getUsername()}, 
+												"timestamp": "02-22-2018 03:09:00PM" 
+											}  
+										}
+									  ]
+									};
+						var additionalParams = { headers: { }, queryParams: { } };
+						
+						console.log(body);
+						apigClient.loginPost({}, body, additionalParams)
+							.then(function(res){
+								console.log("Response from login ");
+								console.log(res.data);
+								result = res.data.messages[0].unstructured.text; 
+								sessionStorage.userID = result["userID"];
+								sessionStorage.username = result["username"];
+								sessionStorage.firstname = result["firstname"];
+								sessionStorage.lastname = result["lastname"] ;
+								console.log(sessionStorage.userID) ;
+								console.log(sessionStorage.username) ;
+								console.log(sessionStorage.firstname) ;
+								console.log(sessionStorage.lastname) ;
 							}).catch( function(result){
 								console.log("ERROR: ");
-								console.log(result); 
-							  // Add error callback code here.
+								console.log(result);  
 							});  
 					}
 				});

@@ -74,7 +74,7 @@ def processAPI(source):
             article.parse() 
             article.nlp()
         except:
-            print("Had trouble downloading: " + a.link) 
+            print("Had trouble downloading link") 
             continue
         
         sentences_list = sent_tokenize(article.text)[1:5]
@@ -147,7 +147,7 @@ def processRSS(source):
             article.nlp()
         except Exception as e: 
             print(e)
-            print("Had trouble downloading: " + entry.link) 
+            print("Had trouble downloading" ) 
             continue 
         
         result["img"] = article.top_image 

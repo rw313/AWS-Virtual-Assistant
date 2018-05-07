@@ -52,8 +52,9 @@ def processQueue():
     slots = message['MessageAttributes']  
     emailrecipient = slots['email']['StringValue'] 
     fullname = slots['firstname']['StringValue']  + " " + slots['lastname']['StringValue'] 
-    interests = slots['interests']['StringValue'].split(",")
+    interests = slots['interests']['StringValue'].split(", ")
     userid = slots['userID']['StringValue']
+    ktc = json.loads(slots['keywordToContacts']['StringValue'])
     friendid = -1 #slots['contactID']['StringValue'] 
     
     emailMsg = "Hi " + fullname + "! Based on the interests of your friends, here are the articles ranked by relevance." 
@@ -64,9 +65,9 @@ def processQueue():
             acHtml = "<div id="+str(ac["articleId"])+">"
             acHtml += "<b style='color:#FF69B4'>"+"("+ac["sourceName"]+") "+ac["title"]+": </b>" 
             acHtml += "<p style='font-size:8px;color=#787878'>By: "+ac["author"] 
-            acHtml += ", Date: "+ac["datePublished"].strftime("%Y-%m-%d %H:%M:%S") if ac["datePublished"] is not None else "N/A" +"</p>" 
+            #acHtml += ", Date: "+ac["datePublished"].strftime("%Y-%m-%d %H:%M:%S") if ac["datePublished"] is not None else "N/A" +"</p>" 
             acHtml += "<p style='font-size:10px;color=#444'>"+ac["description"]+"</p>" 
-            acHtml += "<p style='font-size:5px;color=#787878'>"+ac["keywords"]+"</p>" 
+            acHtml += "<p style='font-size:5px;color=#787878'>"+" or ".join(ktc[query] if query in ktc else ["Someone"])+" might be interested</p>" 
             acHtml += "<a style='font-weight:normal;text-decoration:none' href='"+ac["link"]+"'>"
             acHtml += "<img style='height:150px' src='"+ac["img"]+"'/>" 
             acHtml += "</a>"+"</div><hr/> " 
@@ -77,7 +78,7 @@ def processQueue():
         QueueUrl=queue_url,
         ReceiptHandle=receipt_handle
     )
-    print('Received and deleted message: %s' % message)    
+    print('Received and deleted message: %s' % slots)    
     return receipt_handle 
 
 def rank(query, userid, friendid): 
@@ -111,12 +112,12 @@ def getMatches(queries, articles, userid):
     for query in queries:
         data_samples = [query] 
         for i in range(0, len(articles)):
-            data_samples.append(articles[i]["title"] + articles[i]["keywords"]+articles[i]["description"])
+            data_samples.append(articles[i]["title"]) #+ articles[i]["keywords"]+articles[i]["description"])
 
         tfidf_vectorizer = TfidfVectorizer(stop_words='english')
         tfidf = tfidf_vectorizer.fit_transform(data_samples) 
         cosine_similarities = linear_kernel(tfidf[0:1], tfidf).flatten() #replace first param with query 
-        related_docs_indices = cosine_similarities.argsort()[:-7:-1]
+        related_docs_indices = cosine_similarities.argsort()[:-3:-1]
         
         for j in range(1, len(related_docs_indices)):
             results.append(str(articles[related_docs_indices[j]-1]["articleId"]))
@@ -222,10 +223,12 @@ def sendEmail(email, HTML):
         print(e.response['Error']['Message'])
     else:
         print("Email sent! Message ID:"),
-        print(response['ResponseMetadata']['RequestId'])
-    
-    print("Sent an email")
+        print(response['ResponseMetadata']['RequestId']) 
     
 if __name__ == '__main__':
     #add timer 
-    processQueue() 
+    while (True): 
+        processQueue() 
+        print("Processed, sent email") 
+        time.sleep(60*60*12) #sends an email every 12 hours 
+        

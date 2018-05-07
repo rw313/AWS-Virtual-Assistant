@@ -238,20 +238,25 @@
 
 		#person {
 			display:none;
-			left: 30px;
+			right: 120px;
 			position: absolute;
-			top: 100px;
-			width: 750px;
+			top: 120px;
+			width: 400px;
 			z-index:10000;
-			cursor:move;
-			/*text-align: center;*/
+			cursor:move; 
+			padding: 30px;
+			background:#ccc;
 		}
-		.text {
-			width: 600px;
+		#person h2 {
+		  font-size:15px; text-transform:uppercase;
+		  letter-spacing:1px;
+		  margin-top:10px;
+		  
 		}
-		hr {
-			background-color: #f8a21e;
-			height: 6px;
+		.bio {
+			width: 100%;
+		  padding:30px;
+		  line-height:1.8em;
 		}
 		</style>
 </head>
@@ -259,9 +264,7 @@
 	<div id="person" class="person-text">
 		<h2 class="name"></h2> 
 		<hr>
-		<div class="bio">
-		
-		</div>
+		<div class="bio"> </div>
 	</div>  
 	<div id="body"> 
 	  
@@ -306,6 +309,218 @@
 <script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
 <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script> 
 <script type="text/javascript" src="apigClient.js"></script> 
+
+
+
+<script>
+
+function draw(nodes) {
+	var   w = document.documentElement.clientWidth,
+		  h = document.documentElement.clientHeight,
+		  circleWidth = 5; 
+	 
+	//$("#person").fadeToggle(1000);
+
+	var palette = {
+		  "lightgray": "#E5E8E8",
+		  "gray": "#708284",
+		  "mediumgray": "#536870",
+		  "blue": "#3B757F",
+		  "black": "#787878"
+	  }
+
+	var colors = d3.scale.category20();
+	
+	var links = [];
+
+	for (var i = 0; i < nodes.length; i++){
+		  if (nodes[i].target !== undefined) { 
+				for ( var x = 0; x < nodes[i].target.length; x++ ) 
+				  links.push({
+					  source: nodes[i],
+					  target: nodes[nodes[i].target[x]]  
+				  });
+		  };
+	};
+
+
+	var myChart = d3.select('body')
+		  .append("div")
+			.classed("svg-container", true)
+		  
+		  .append('svg')
+			.attr("preserveAspectRatio", "xMinYMin meet")
+			.attr("viewBox", "0 0 "+document.documentElement.clientWidth+" "+(document.documentElement.clientHeight+100))
+			.classed("svg-content-responsive", true)
+
+
+	var force = d3.layout.force()
+		  .nodes(nodes)
+		  .links([])
+		  .gravity(0.1)
+		  .charge(-1000)
+		  .size([w,h]); 
+
+		  var link = myChart.selectAll('line') 
+				.data(links).enter().append('line')
+				.attr('stroke', palette.black) //light
+				.attr('strokewidth', '2');
+
+		  var node =  myChart.selectAll('circle')  
+				.data(nodes).enter() 
+				.append('g') 
+				.call(force.drag) 
+		  
+				.attr("class", "node not-moved")
+				.on("click", function(d){
+				  if ( d3.select(this).classed("moved") ) { 
+					// == Transition Back ==
+					d3.select(this).classed({"not-moved": true, "moved": false});
+					//d3.select(this).transition().ease('quad').duration(700).attr("transform", "translate(0, " + (5) + ")"); //330 - d.cy
+					//d3.select(this).transition().ease('linear').delay(700).duration(500).attr("transform", "translate(0,0)");
+					$("#person").fadeToggle(500);
+					$(this).siblings(".node").delay(300).fadeToggle();
+					
+					//$(".web, .sub-connect, .sub-node-green-circle").delay(1500).fadeToggle(1000);
+					d3.select(this).classed("moved", false);
+					
+				  } else {
+				  // == Initial Transition ==
+				  //d3.select(this).transition().ease('quad').duration(700).attr("transform", "translate("+300+", " + (400) + ")"); //330 - d.cy
+				  //d3.select(this).transition().ease('linear').delay(700).duration(500).attr("transform", "translate(" + (150) + "," +  (200) + ")"); //840 - d.cx 200 - d.cy
+				  d3.select(this).attr("class", "node moved")
+				  //d3.select(this).classed({"moved":true, "not-moved":false});
+				  
+				  //$(".web, .sub-connect, .sub-node-green-circle").toggle(200);
+				  $( "#person .name" ).html(d.name);
+				  $( "#person .bio" ).html(d.info);
+				  $(this).siblings(".node").fadeToggle(300);
+				  $("#person").delay(300).fadeToggle(500); 
+				  }
+				});
+
+
+		 
+		 node.append('circle')
+				.attr('cx', function(d){return d.x; })
+				.attr('cy', function(d){return d.y; })
+				.attr('r', function(d,i){
+					  console.log(d.value);
+					  if ( i > 0 ) {
+							return circleWidth + d.value; 
+					  } else {
+							return circleWidth + 35; 
+					  }
+				})
+				.attr('fill', function(d,i){
+					  if ( i > 0 ) {
+							return d.color; //colors(i);
+					  } else {
+							return '#000';
+					  }
+				})
+				.attr('strokewidth', function(d,i){
+					  if ( i > 0 ) {
+							return '0';
+					  } else {
+							return '2';
+					  }
+				})
+				.attr('stroke', function(d,i){
+					  if ( i > 0 ) {
+							return '';
+					  } else {
+							return '#fff';
+					  }
+				});
+
+
+		  force.on('tick', function(e){ 
+				node.attr('transform', function(d, i){
+				  return 'translate(' + d.x + ','+ d.y + ')'
+				})
+
+			  link 
+				  .attr('x1', function(d){ return d.source.x; }) 
+				  .attr('y1', function(d){ return d.source.y; })
+				  .attr('x2', function(d){ return d.target.x; })
+				  .attr('y2', function(d){ return d.target.y; })
+		  });
+
+
+		  node.append('text')
+				.text(function(d){ return d.name; })
+				.attr('font-family', 'Raleway', 'Helvetica Neue, Helvetica')
+				.attr('fill', function(d, i){
+				  console.log(d.value);
+				  return d.textcolor; 
+				  /*
+					  if ( i > 0 && d.value < 10 ) {
+							return palette.mediumgray;
+					  } else if ( i > 0 && d.value >10 ) {
+							return palette.lightgray;
+					  } else {
+							return palette.blue;
+					  } */
+				})
+				.attr('text-anchor', function(d, i) {
+					  return 'middle';
+				})
+				.attr('font-size', function(d, i){
+					  if (i > 0) {
+							return '13px';
+					  } else {
+							return '15px';    
+					  }
+				});
+
+	force.start();
+}
+
+dragElement(document.getElementById(("person")));
+
+function dragElement(elmnt) {
+  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  if (document.getElementById(elmnt.id + "header")) {
+    /* if present, the header is where you move the DIV from:*/
+    document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+  } else {
+    /* otherwise, move the DIV from anywhere inside the DIV:*/
+    elmnt.onmousedown = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    // calculate the new cursor position:
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    // set the element's new position:
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  }
+
+  function closeDragElement() {
+    /* stop moving when mouse button is released:*/
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}
+
+</script>
+
+
 
 <script> 
 var apigClient; 
@@ -591,6 +806,7 @@ $(function() {
 				console.log("HERE IS THE RESULT:"); 
 				console.log(result.data.messages[0].unstructured.text);
 				response = result.data.messages[0].unstructured.text; 
+				draw(response); 
 				//response is nodes variable for d3
 			}).catch( function(result){
 				console.log("ERROR: ");
@@ -601,239 +817,10 @@ $(function() {
 		return response; 
 	}; 
 	
-	setTimeout(function() {    
+	setTimeout(function() {   
 		getContacts(); 
     }, 1000)
 });
 
 </script> 
-
-<script>
-var   w = 1000,
-      h =  800,
-      circleWidth = 5; 
- 
-//$("#person").fadeToggle(1000);
-
-var palette = {
-      "lightgray": "#E5E8E8",
-      "gray": "#708284",
-      "mediumgray": "#536870",
-      "blue": "#3B757F",
-      "pink": "magenta"
-  }
-
-var colors = d3.scale.category20();
-
-var nodes = [
-      { name: "Me"},
-      { name: "Anne Smith", target: [0], value: 58, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Max Picerni", target: [0], value: 65, info:"Anne Smith. She's a biomedical student at the medical center." }, 
-      { name: "Scss", target: [0], value: 52, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Compass", target: [0], value: 48, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Susy", target: [0], value: 40, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Breakpoints", target: [0], value: 36, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "jQuery", target: [0], value: 52, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Javascript", target: [0], value: 42, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "PHP", target: [0], value: 35 , info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Wordpress", target: [0], value: 67, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Git", target: [0], value: 68, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Snap.svg", target: [0], value: 16, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "d3", target: [0], value: 25, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Gulp", target: [0], value: 45, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "AngularJS", target: [0], value: 27, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Adobe CS", target: [0], value: 57, info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "mySql", target: [0], value: 20 , info:"Anne Smith. She's a biomedical student at the medical center." },
-      { name: "Grunt", target: [0], value: 37 , info:"Anne Smith. She's a biomedical student at the medical center." }, //value could be sum of factors 
-];
-
-var links = [];
-
-for (var i = 0; i < nodes.length; i++){
-      if (nodes[i].target !== undefined) { 
-            for ( var x = 0; x < nodes[i].target.length; x++ ) 
-              links.push({
-                  source: nodes[i],
-                  target: nodes[nodes[i].target[x]]  
-              });
-      };
-};
-
-
-var myChart = d3.select('body')
-      .append("div")
-        .classed("svg-container", true)
-      
-      .append('svg')
-        .attr("preserveAspectRatio", "xMinYMin meet")
-        .attr("viewBox", "0 0 1200 800")
-        .classed("svg-content-responsive", true)
-
-
-var force = d3.layout.force()
-      .nodes(nodes)
-      .links([])
-      .gravity(0.1)
-      .charge(-1000)
-      .size([w,h]); 
-
-      var link = myChart.selectAll('line') 
-            .data(links).enter().append('line')
-            .attr('stroke', palette.lightgray)
-            .attr('strokewidth', '1');
-
-      var node =  myChart.selectAll('circle')  
-            .data(nodes).enter() 
-            .append('g') 
-            .call(force.drag) 
-      
-            .attr("class", "node not-moved")
-            .on("click", function(d){
-              if ( d3.select(this).classed("moved") ) { 
-                // == Transition Back ==
-                d3.select(this).classed({"not-moved": true, "moved": false});
-                //d3.select(this).transition().ease('quad').duration(700).attr("transform", "translate(0, " + (5) + ")"); //330 - d.cy
-                //d3.select(this).transition().ease('linear').delay(700).duration(500).attr("transform", "translate(0,0)");
-                $("#person").fadeToggle(500);
-                $(this).siblings(".node").delay(300).fadeToggle();
-                
-                //$(".web, .sub-connect, .sub-node-green-circle").delay(1500).fadeToggle(1000);
-                d3.slect(this).classed("moved", false);
-                
-              } else {
-              // == Initial Transition ==
-              //d3.select(this).transition().ease('quad').duration(700).attr("transform", "translate("+300+", " + (400) + ")"); //330 - d.cy
-              //d3.select(this).transition().ease('linear').delay(700).duration(500).attr("transform", "translate(" + (150) + "," +  (200) + ")"); //840 - d.cx 200 - d.cy
-              d3.select(this).attr("class", "node moved")
-              //d3.select(this).classed({"moved":true, "not-moved":false});
-              
-              //$(".web, .sub-connect, .sub-node-green-circle").toggle(200);
-              $( "#person .name" ).html(d.name);
-              $( "#person .bio" ).html(d.info);
-              $(this).siblings(".node").fadeToggle(300);
-              $("#person").delay(300).fadeToggle(500); 
-              }
-            });
-
-
-     
-     node.append('circle')
-            .attr('cx', function(d){return d.x; })
-            .attr('cy', function(d){return d.y; })
-            .attr('r', function(d,i){
-                  console.log(d.value);
-                  if ( i > 0 ) {
-                        return circleWidth + d.value; 
-                  } else {
-                        return circleWidth + 35; 
-                  }
-            })
-            .attr('fill', function(d,i){
-                  if ( i > 0 ) {
-                        return colors(i);
-                  } else {
-                        return '#fff';
-                  }
-            })
-            .attr('strokewidth', function(d,i){
-                  if ( i > 0 ) {
-                        return '0';
-                  } else {
-                        return '2';
-                  }
-            })
-            .attr('stroke', function(d,i){
-                  if ( i > 0 ) {
-                        return '';
-                  } else {
-                        return 'black';
-                  }
-            });
-
-
-      force.on('tick', function(e){ 
-            node.attr('transform', function(d, i){
-              return 'translate(' + d.x + ','+ d.y + ')'
-            })
-
-          link 
-              .attr('x1', function(d){ return d.source.x; }) 
-              .attr('y1', function(d){ return d.source.y; })
-              .attr('x2', function(d){ return d.target.x; })
-              .attr('y2', function(d){ return d.target.y; })
-      });
-
-
-      node.append('text')
-            .text(function(d){ return d.name; })
-            .attr('font-family', 'Raleway', 'Helvetica Neue, Helvetica')
-            .attr('fill', function(d, i){
-              console.log(d.value);
-                  if ( i > 0 && d.value < 10 ) {
-                        return palette.mediumgray;
-                  } else if ( i > 0 && d.value >10 ) {
-                        return palette.lightgray;
-                  } else {
-                        return palette.blue;
-                  }
-            })
-            .attr('text-anchor', function(d, i) {
-                  return 'middle';
-            })
-            .attr('font-size', function(d, i){
-                  if (i > 0) {
-                        return '.7em';
-                  } else {
-                        return '.9em';    
-                  }
-            });
-
-
-
-  
-force.start();
-
-
-dragElement(document.getElementById(("person")));
-
-function dragElement(elmnt) {
-  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-  if (document.getElementById(elmnt.id + "header")) {
-    /* if present, the header is where you move the DIV from:*/
-    document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
-  } else {
-    /* otherwise, move the DIV from anywhere inside the DIV:*/
-    elmnt.onmousedown = dragMouseDown;
-  }
-
-  function dragMouseDown(e) {
-    e = e || window.event;
-    // get the mouse cursor position at startup:
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    document.onmouseup = closeDragElement;
-    // call a function whenever the cursor moves:
-    document.onmousemove = elementDrag;
-  }
-
-  function elementDrag(e) {
-    e = e || window.event;
-    // calculate the new cursor position:
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    // set the element's new position:
-    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-  }
-
-  function closeDragElement() {
-    /* stop moving when mouse button is released:*/
-    document.onmouseup = null;
-    document.onmousemove = null;
-  }
-}
-
-</script>
 </body>

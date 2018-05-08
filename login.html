@@ -9,26 +9,138 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.css">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"> 
-</head>
+	<style>
+		@import url(https://fonts.googleapis.com/css?family=Raleway:100,400,600|Open+Sans:100,300,400,600);
+body,html {
+  height:100%;
+  max-height:100%; 
+  font-size:20px;
+  font-weight:200;
+  line-height:20px;
+}
+body, a, input {
+  font-family: 'Raleway';
+}
+h1, h2, h3 {
+  font-family: 'Open Sans';
+}
+
+body {
+  background-image:url(https://images.unsplash.com/photo-1512134734790-9f5936895aba?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=90f8c90bf7228a974abbbfe2dd3f6193&auto=format&fit=crop&w=1864&q=80);
+  background-size:cover;
+  background-position:center center;
+  background-attachment:fixed;
+  position:relative;
+  overflow:auto; 
+}
+
+  #modal {  
+    background:inherit; 
+    border-radius:1px;
+    //box-shadow:0 0 50px 5px rgba(0,0,0,.2);
+    width:27vw;
+    min-width:300px;
+    margin-left:auto;
+    margin-right:auto;
+    padding-top:15vh;
+}
+    #content {  
+      z-index:1;
+      height:100%;
+      width:100%;
+      background:rgba(255,255,255,.6);
+      text-align:center; 
+      padding-top:50px;
+      padding-bottom:50px;
+      padding-left: 15px;
+      padding-right:15px;
+    }
+    #background {
+      background:inherit; 
+      height:calc(100% + 100px);
+      width:calc(100% + 100px);
+      -webkit-filter:blur(10px);
+    } 
+
+#modal hr {
+  color:#fff;
+  margin-top:20px;
+  margin-bottom:20px;
+}
+
+.input_form_sign {  
+  border: none;
+  border-bottom: 3px solid #B0BEC5 ;
+  background-color: rgba(255,255,255,.7);
+  margin-top:8px;
+  width:70%;
+  border-radius:2px; 
+  transition: all 0.5s; 
+  padding: 10px 3px;  
+  letter-spacing: 1px;
+}
+.input_form_sign:focus {  
+  border: none;
+  border-bottom: 3px solid #B0BEC5 ;
+  background-color: rgba(255,255,255,.8);  
+}
+
+.header {
+  font-weight:light;
+  letter-spacing: 2px;
+  text-transform:uppercase; 
+  color: #111313; 
+}
+
+#signuplink {
+  color:#697276;
+  text-decoration:none;
+  font-size:12px;
+  font-weight:bold; 
+}
+
+.submitbtn {
+  padding: 10px 23px;
+  background: none;
+  color: #444;
+  text-transform:uppercase;
+  letter-spacing: 1px;
+  border:3px solid #B0BEC5;
+  box-shadow:0 0 50px 5px rgba(255,255,255,.3); 
+  z-index:10000;
+  cursor:pointer;
+  
+}
+.submitbtn:hover {
+  background: #B0BEC5;
+}
+
+	</style>
+	</head>
 <body class="container" > 
-	<div id="center-text">
-		<h2>Log In </h2>
-		<p>UI from codepen</p>
-		<p>If you do not have an account, please sign up at the /signup.html page</p> 
-	</div> 
-	<div id="body"> 
-	   <form action="#" id="login"> 
-				<label for="username">Username: </label>
-				<input id="username" name="username" type="text" value="usertest1" required/>
-				<br/><hr>
-				<label for="password">Password: </label>
-				<input id="password" name="password" type="password" value="password" required /> 
-				
-				<hr/>
-				<input type="submit" value="Submit"  /> 
-	   </form>
-	   
-	   <div id="status"></div>
+	
+	<div id="modal">
+	  <div id="content"><div id="center-text">
+			<h2 class="header">Log In </h2> 
+		<p><a id="signuplink" href="/signup.html">Sign up here</a></p> 
+		<br/>
+		</div> 
+		<div id="body"> 
+		   <form action="#" id="login"> 
+					
+					<input class="input_form_sign" id="username" name="username" type="text" value="demo2" placeholder="Username" required/>
+					<br/> 
+					
+					<input class="input_form_sign" id="password" name="password" type="password" value="password" placeholder="Password"  required /> 
+					
+		   <br/><br/>
+					 
+					<input class="submitbtn" type="submit" value="Submit"  /> 
+		   </form>
+		   
+		   <div id="status"></div>
+		</div></div>
+	  <div id="background"></div>
 	</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
@@ -99,7 +211,7 @@ $(function() { //shorthand document.ready function
 						 // example: var s3 = new AWS.S3();
 						 
 						 console.log('Successfully logged in!');
-						 $('#status').html("Success. Go to home page: <a href='/app.html'>here</a>");
+						 $('#status').html("Success. Go to home page: <a href='/index.html'>here</a>");
 						
 						//going to fetch RDS user id 
 						var apigClient = apigClientFactory.newClient( { 

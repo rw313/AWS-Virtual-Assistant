@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<head>
+	<!-- EVERYTHING for CSS IS NOT MY WORK. IT IS ATTRIBUTED TO https://codepen.io/shivapandey/pen/dWdRYM?q=chat%20ui&order=popularity&depth=everything&show_forks=false --> 
+	
+	<title>Assistant Cat</title>   
+	<script src="aws-amplify-master\packages\amazon-cognito-identity-js\dist\aws-cognito-sdk.min.js"></script> 
+	<script src="aws-amplify-master\packages\amazon-cognito-identity-js\dist\amazon-cognito-identity.min.js"></script>
+	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.201.0.min.js"></script>   
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/4.0.2/bootstrap-material-design.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src ="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.14/d3.js"></script>
+	
+
+	<!-- CSS Styles -->
+	<style> 
+	  #speech-mic {
+		float: right;
+		margin-right: 30px; 
+		height: 35px;
+		display: inline-block;
+		z-index: 10;
+		cursor: pointer;
+	  }
+	  .speech-mic-wrapper {
+		position: absolute;
+		bottom: 5px;
+		right: 10px;
+		background: transparent;
+		box-shadow: none;
+		border: none;
+		border-radius: 50%;
+		color: #5A5EB9;
+		width: 35px;
+		height: 35px;
+		z-index: 10;
+	  }
+	  #chat-submit {
+		z-index:11;
+	  }
+	</style>
+		
+	<style>
+		html, body {
+		  background: #efefef;      
+		  //height:100%;  
+		}
+		#center-text {          
+		  display: flex;
+		  flex: 1;
+		  flex-direction:column; 
+		  justify-content: center;
+		  align-items: center;  
+		  height:100%;
+		  
+		}
+		#chat-circle {
+		  position: fixed;
+		  bottom: 50px;
+		  right: 50px;
+		  background: #5A5EB9;
+		  width: 80px;
+		  height: 80px;  
+		  border-radius: 50%;
+		  color: white;
+		  padding: 28px;
+		  cursor: pointer;
+		  box-shadow: 0px 3px 16px 0px rgba(0, 0, 0, 0.6), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+		}
+
+		.btn#my-btn {
+			 background: white;
+			padding-top: 13px;
+			padding-bottom: 12px;
+			border-radius: 45px;
+			padding-right: 40px;
+			padding-left: 40px;
+			color: #5865C3;
+		}
+		#chat-overlay {
+			background: rgba(255,255,255,0.1);
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			border-radius: 50%;
+			display: none;
+		}
+
+
+		.chat-box {
+		  display:none;
+		  background: #efefef;
+		  position:fixed;
+		  right:30px;
+		  bottom:50px;  
+		  width:350px;
+		  max-width: 85vw;
+		  max-height:100vh;
+		  border-radius:5px;  
+		/*   box-shadow: 0px 5px 35px 9px #464a92; */
+		  box-shadow: 0px 5px 35px 9px #ccc;
+		}
+		.chat-box-toggle {
+		  float:right;
+		  margin-right:15px;
+		  cursor:pointer;
+		}
+		.chat-box-header {
+		  background: #5A5EB9;
+		  height:70px;
+		  border-top-left-radius:5px;
+		  border-top-right-radius:5px; 
+		  color:white;
+		  text-align:center;
+		  font-size:20px;
+		  padding-top:17px;
+		}
+		.chat-box-body {
+		  position: relative;  
+		  height:370px;  
+		  height:auto;
+		  border:1px solid #ccc;  
+		  overflow: hidden;
+		}
+		.chat-box-body:after {
+		  content: "";
+		  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAgOCkiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGNpcmNsZSBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS4yNSIgY3g9IjE3NiIgY3k9IjEyIiByPSI0Ii8+PHBhdGggZD0iTTIwLjUuNWwyMyAxMW0tMjkgODRsLTMuNzkgMTAuMzc3TTI3LjAzNyAxMzEuNGw1Ljg5OCAyLjIwMy0zLjQ2IDUuOTQ3IDYuMDcyIDIuMzkyLTMuOTMzIDUuNzU4bTEyOC43MzMgMzUuMzdsLjY5My05LjMxNiAxMC4yOTIuMDUyLjQxNi05LjIyMiA5LjI3NC4zMzJNLjUgNDguNXM2LjEzMSA2LjQxMyA2Ljg0NyAxNC44MDVjLjcxNSA4LjM5My0yLjUyIDE0LjgwNi0yLjUyIDE0LjgwNk0xMjQuNTU1IDkwcy03LjQ0NCAwLTEzLjY3IDYuMTkyYy02LjIyNyA2LjE5Mi00LjgzOCAxMi4wMTItNC44MzggMTIuMDEybTIuMjQgNjguNjI2cy00LjAyNi05LjAyNS0xOC4xNDUtOS4wMjUtMTguMTQ1IDUuNy0xOC4xNDUgNS43IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS4yNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTg1LjcxNiAzNi4xNDZsNS4yNDMtOS41MjFoMTEuMDkzbDUuNDE2IDkuNTIxLTUuNDEgOS4xODVIOTAuOTUzbC01LjIzNy05LjE4NXptNjMuOTA5IDE1LjQ3OWgxMC43NXYxMC43NWgtMTAuNzV6IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS4yNSIvPjxjaXJjbGUgZmlsbD0iIzAwMCIgY3g9IjcxLjUiIGN5PSI3LjUiIHI9IjEuNSIvPjxjaXJjbGUgZmlsbD0iIzAwMCIgY3g9IjE3MC41IiBjeT0iOTUuNSIgcj0iMS41Ii8+PGNpcmNsZSBmaWxsPSIjMDAwIiBjeD0iODEuNSIgY3k9IjEzNC41IiByPSIxLjUiLz48Y2lyY2xlIGZpbGw9IiMwMDAiIGN4PSIxMy41IiBjeT0iMjMuNSIgcj0iMS41Ii8+PHBhdGggZmlsbD0iIzAwMCIgZD0iTTkzIDcxaDN2M2gtM3ptMzMgODRoM3YzaC0zem0tODUgMThoM3YzaC0zeiIvPjxwYXRoIGQ9Ik0zOS4zODQgNTEuMTIybDUuNzU4LTQuNDU0IDYuNDUzIDQuMjA1LTIuMjk0IDcuMzYzaC03Ljc5bC0yLjEyNy03LjExNHpNMTMwLjE5NSA0LjAzbDEzLjgzIDUuMDYyLTEwLjA5IDcuMDQ4LTMuNzQtMTIuMTF6bS04MyA5NWwxNC44MyA1LjQyOS0xMC44MiA3LjU1Ny00LjAxLTEyLjk4N3pNNS4yMTMgMTYxLjQ5NWwxMS4zMjggMjAuODk3TDIuMjY1IDE4MGwyLjk0OC0xOC41MDV6IiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS4yNSIvPjxwYXRoIGQ9Ik0xNDkuMDUgMTI3LjQ2OHMtLjUxIDIuMTgzLjk5NSAzLjM2NmMxLjU2IDEuMjI2IDguNjQyLTEuODk1IDMuOTY3LTcuNzg1LTIuMzY3LTIuNDc3LTYuNS0zLjIyNi05LjMzIDAtNS4yMDggNS45MzYgMCAxNy41MSAxMS42MSAxMy43MyAxMi40NTgtNi4yNTcgNS42MzMtMjEuNjU2LTUuMDczLTIyLjY1NC02LjYwMi0uNjA2LTE0LjA0MyAxLjc1Ni0xNi4xNTcgMTAuMjY4LTEuNzE4IDYuOTIgMS41ODQgMTcuMzg3IDEyLjQ1IDIwLjQ3NiAxMC44NjYgMy4wOSAxOS4zMzEtNC4zMSAxOS4zMzEtNC4zMSIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEuMjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvZz48L3N2Zz4=');
+		  opacity: 0.1;
+		  top: 0;
+		  left: 0;
+		  bottom: 0;
+		  right: 0;
+		  height:100%;
+		  position: absolute;
+		  z-index: -1;   
+		}
+		#chat-input {
+		  background: #f4f7f9;
+		  width:100%; 
+		  position:relative;
+		  height:47px;  
+		  padding-top:10px;
+		  padding-right:50px;
+		  padding-bottom:10px;
+		  padding-left:15px;
+		  border:none;
+		  resize:none;
+		  outline:none;
+		  border:1px solid #ccc;
+		  color:#888;
+		  border-top:none;
+		  border-bottom-right-radius:5px;
+		  border-bottom-left-radius:5px;
+		  overflow:hidden;  
+		}
+		.chat-input > form {
+			margin-bottom: 0;
+		}
+		#chat-input::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+		  color: #ccc;
+		}
+		#chat-input::-moz-placeholder { /* Firefox 19+ */
+		  color: #ccc;
+		}
+		#chat-input:-ms-input-placeholder { /* IE 10+ */
+		  color: #ccc;
+		}
+		#chat-input:-moz-placeholder { /* Firefox 18- */
+		  color: #ccc;
+		}
+		.chat-submit {  
+		  position:absolute;
+		  bottom:3px;
+		  right:10px;
+		  background: transparent;
+		  box-shadow:none;
+		  border:none;
+		  border-radius:50%;
+		  color:#5A5EB9;
+		  width:35px;
+		  height:35px;  
+		}
+		.chat-logs {
+		  padding:15px; 
+		  height:370px;
+		  overflow-y:scroll;
+		}
+
+		.chat-logs::-webkit-scrollbar-track
+		{
+			-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+			background-color: #F5F5F5;
+		}
+
+		.chat-logs::-webkit-scrollbar
+		{
+			width: 5px;  
+			background-color: #F5F5F5;
+		}
+
+		.chat-logs::-webkit-scrollbar-thumb
+		{
+			background-color: #5A5EB9;
+		}
+
+
+
+		@media only screen and (max-width: 500px) {
+		   .chat-logs {
+				height:40vh;
+			}
+		}
+
+		.chat-msg.user > .msg-avatar img {
+		  width:45px;
+		  height:45px;
+		  border-radius:50%;
+		  float:left;
+		  width:15%;
+		}
+		.chat-msg.self > .msg-avatar img {
+		  width:45px;
+		  height:45px;
+		  border-radius:50%;
+		  float:right;
+		  width:15%;
+		}
+		.cm-msg-text {
+		  background:white;
+		  padding:10px 15px 10px 15px;  
+		  color:#666;
+		  max-width:75%;
+		  float:left;
+		  margin-left:10px; 
+		  position:relative;
+		  margin-bottom:20px;
+		  border-radius:30px;
+		}
+		.chat-msg {
+		  clear:both;    
+		}
+		.chat-msg.self > .cm-msg-text {  
+		  float:right;
+		  margin-right:10px;
+		  background: #5A5EB9;
+		  color:white;
+		}
+		.cm-msg-button>ul>li {
+		  list-style:none;
+		  float:left;
+		  width:50%;
+		}
+		.cm-msg-button {
+			clear: both;
+			margin-bottom: 70px;
+		}
+	</style>
+
+	<style>
+	@import url(https://fonts.googleapis.com/css?family=Raleway:400);
+
+	.person-text{font: 400 .7em/1.5em "Raleway", "Helvetica Neue", Helvetica, sans-serif; text-align:center;}
+
+	#person {
+		display:none;
+		right: 120px;
+		position: absolute;
+		top: 120px;
+		width: 400px;
+		z-index:10000;
+		cursor:move; 
+		padding: 30px;
+		background:#ccc;
+	}
+	#person h2 {
+	  font-size:15px; text-transform:uppercase;
+	  letter-spacing:1px;
+	  margin-top:10px;
+	  
+	}
+	.bio {
+		width: 100%;
+	  padding:30px;
+	  line-height:1.8em;
+	}
+	</style>
+</head>
+<body> 
+
+<div id="person" class="person-text">
+		<h2 class="name"></h2> 
+		<hr>
+		<div class="bio"> </div>
+	</div>  
+	<div id="body"> 
+	  
+		<div id="chat-circle" class="btn btn-raised">
+			<div id="chat-overlay"></div>
+				<i class="material-icons">speaker_phone</i>
+		</div>
+		  
+		<div class="chat-box">
+			<div class="chat-box-header">
+			  ChatBot
+			  <span class="chat-box-toggle"><i class="material-icons">close</i></span>
+			</div>
+			<div class="chat-box-body">
+			  <div class="chat-box-overlay">   
+			  </div>
+			  <div class="chat-logs">
+			   
+			  </div><!--chat-log -->
+			</div>
+			<div class="chat-input">      
+			  <form>
+				<div class="speech-mic-wrapper">
+    
+					<img id="speech-mic" onclick="startDictation()" src="//i.imgur.com/cHidSVu.gif">
+			    </div>
+			  
+				<input type="text" id="chat-input" placeholder="Send a message..."/>
+			  <button type="submit" class="chat-submit" id="chat-submit"><i class="material-icons">send</i></button>
+			  </form>      
+			</div>
+		</div> 
+	</div>
+
+<!-- HTML5 Speech Recognition API -->
+<script>
+  function startDictation() {
+
+    if (window.hasOwnProperty('webkitSpeechRecognition')) {
+
+      var recognition = new webkitSpeechRecognition();
+
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.lang = "en-US";
+      recognition.start();
+
+      recognition.onresult = function(e) {
+	    //transcript
+        document.getElementById('chat-input').value = e.results[0][0].transcript;
+        recognition.stop();  
+      };
+
+      recognition.onerror = function(e) {
+        recognition.stop();
+      }
+
+    }
+  }
+</script>
+	
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+
+<script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
+<script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
+<script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
+<script type="text/javascript" src="lib/CryptoJS/components/hmac.js"></script>
+<script type="text/javascript" src="lib/CryptoJS/components/enc-base64.js"></script>
+<script type="text/javascript" src="lib/url-template/url-template.js"></script>
+<script type="text/javascript" src="lib/apiGatewayCore/sigV4Client.js"></script>
+<script type="text/javascript" src="lib/apiGatewayCore/apiGatewayClient.js"></script>
+<script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
+<script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script> 
+<script type="text/javascript" src="apigClient.js"></script> 
+
+
+
+<script>
+
+function draw(nodes) {
+	var   w = document.documentElement.clientWidth,
+		  h = document.documentElement.clientHeight,
+		  circleWidth = 5; 
+	 
+	//$("#person").fadeToggle(1000);
+
+	var palette = {
+		  "lightgray": "#E5E8E8",
+		  "gray": "#708284",
+		  "mediumgray": "#536870",
+		  "blue": "#3B757F",
+		  "black": "#787878"
+	  }
+
+	var colors = d3.scale.category20();
+	
+	var links = [];
+
+	for (var i = 0; i < nodes.length; i++){
+		  if (nodes[i].target !== undefined) { 
+				for ( var x = 0; x < nodes[i].target.length; x++ ) 
+				  links.push({
+					  source: nodes[i],
+					  target: nodes[nodes[i].target[x]]  
+				  });
+		  };
+	};
+
+
+	var myChart = d3.select('body')
+		  .append("div")
+			.classed("svg-container", true)
+		  
+		  .append('svg')
+			.attr("preserveAspectRatio", "xMinYMin meet")
+			.attr("viewBox", "0 0 "+document.documentElement.clientWidth+" "+(document.documentElement.clientHeight+100))
+			.classed("svg-content-responsive", true)
+
+
+	var force = d3.layout.force()
+		  .nodes(nodes)
+		  .links([])
+		  .gravity(0.1)
+		  .charge(-1000)
+		  .size([w,h]); 
+
+		  var link = myChart.selectAll('line') 
+				.data(links).enter().append('line')
+				.attr('stroke', palette.black) //light
+				.attr('strokewidth', '2');
+
+		  var node =  myChart.selectAll('circle')  
+				.data(nodes).enter() 
+				.append('g') 
+				.call(force.drag) 
+		  
+				.attr("class", "node not-moved")
+				.on("click", function(d){
+				  if ( d3.select(this).classed("moved") ) { 
+					// == Transition Back ==
+					d3.select(this).classed({"not-moved": true, "moved": false});
+					//d3.select(this).transition().ease('quad').duration(700).attr("transform", "translate(0, " + (5) + ")"); //330 - d.cy
+					//d3.select(this).transition().ease('linear').delay(700).duration(500).attr("transform", "translate(0,0)");
+					$("#person").fadeToggle(500);
+					$(this).siblings(".node").delay(300).fadeToggle();
+					
+					//$(".web, .sub-connect, .sub-node-green-circle").delay(1500).fadeToggle(1000);
+					d3.select(this).classed("moved", false);
+					
+				  } else {
+				  // == Initial Transition ==
+				  //d3.select(this).transition().ease('quad').duration(700).attr("transform", "translate("+300+", " + (400) + ")"); //330 - d.cy
+				  //d3.select(this).transition().ease('linear').delay(700).duration(500).attr("transform", "translate(" + (150) + "," +  (200) + ")"); //840 - d.cx 200 - d.cy
+				  d3.select(this).attr("class", "node moved")
+				  //d3.select(this).classed({"moved":true, "not-moved":false});
+				  
+				  //$(".web, .sub-connect, .sub-node-green-circle").toggle(200);
+				  $( "#person .name" ).html(d.name);
+				  $( "#person .bio" ).html(d.info);
+				  $(this).siblings(".node").fadeToggle(300);
+				  $("#person").delay(300).fadeToggle(500); 
+				  }
+				});
+
+
+		 
+		 node.append('circle')
+				.attr('cx', function(d){return d.x; })
+				.attr('cy', function(d){return d.y; })
+				.attr('r', function(d,i){
+					  console.log(d.value);
+					  if ( i > 0 ) {
+							return circleWidth + d.value; 
+					  } else {
+							return circleWidth + 35; 
+					  }
+				})
+				.attr('fill', function(d,i){
+					  if ( i > 0 ) {
+							return d.color; //colors(i);
+					  } else {
+							return '#000';
+					  }
+				})
+				.attr('strokewidth', function(d,i){
+					  if ( i > 0 ) {
+							return '0';
+					  } else {
+							return '2';
+					  }
+				})
+				.attr('stroke', function(d,i){
+					  if ( i > 0 ) {
+							return '';
+					  } else {
+							return '#fff';
+					  }
+				});
+
+
+		  force.on('tick', function(e){ 
+				node.attr('transform', function(d, i){
+				  return 'translate(' + d.x + ','+ d.y + ')'
+				})
+
+			  link 
+				  .attr('x1', function(d){ return d.source.x; }) 
+				  .attr('y1', function(d){ return d.source.y; })
+				  .attr('x2', function(d){ return d.target.x; })
+				  .attr('y2', function(d){ return d.target.y; })
+		  });
+
+
+		  node.append('text')
+				.text(function(d){ return d.name; })
+				.attr('font-family', 'Raleway', 'Helvetica Neue, Helvetica')
+				.attr('fill', function(d, i){
+				  console.log(d.value);
+				  return d.textcolor; 
+				  /*
+					  if ( i > 0 && d.value < 10 ) {
+							return palette.mediumgray;
+					  } else if ( i > 0 && d.value >10 ) {
+							return palette.lightgray;
+					  } else {
+							return palette.blue;
+					  } */
+				})
+				.attr('text-anchor', function(d, i) {
+					  return 'middle';
+				})
+				.attr('font-size', function(d, i){
+					  if (i > 0) {
+							return '13px';
+					  } else {
+							return '15px';    
+					  }
+				});
+
+	force.start();
+}
+
+dragElement(document.getElementById(("person")));
+
+function dragElement(elmnt) {
+  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  if (document.getElementById(elmnt.id + "header")) {
+    /* if present, the header is where you move the DIV from:*/
+    document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+  } else {
+    /* otherwise, move the DIV from anywhere inside the DIV:*/
+    elmnt.onmousedown = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    // calculate the new cursor position:
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    // set the element's new position:
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  }
+
+  function closeDragElement() {
+    /* stop moving when mouse button is released:*/
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}
+
+</script>
+
+
+
+<script> 
+var apigClient; 
+
+var idpoolid = 'us-east-2:1ca556e5-c821-4598-be84-3540ef89764d'; 
+var userpoolid = 'us-east-2_ortRoFV5S';
+var clientid = '1r2t55rcmpmni754h9v67hcvsj';  
+var endpt = 'https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ortRoFV5S'; 
+var RoleArn = 'arn:aws:iam::073632995568:role/Cognito_RyzeChatAppAuth_Role'; 
+
+var jwt = ''; 
+
+AWS.config.region = 'us-east-2';
+AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+    IdentityPoolId: 'us-east-2:1ca556e5-c821-4598-be84-3540ef89764d',
+});
+
+AWSCognito.config.region= 'us-east-2';  
+
+var poolData = {
+	UserPoolId : userpoolid, 
+	ClientId : clientid, 
+	endpoint : endpt  
+};
+var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+var cognitoUser = userPool.getCurrentUser();
+
+if (cognitoUser != null) {
+	cognitoUser.getSession(function(err, session) {
+		if (err) {
+			alert(err);
+			return;
+		}
+		console.log('session validity: ' + session.isValid()); 
+		console.log(session);
+		jwt = session.getIdToken().getJwtToken(); 
+		
+		cognitoUser.getUserAttributes(function(err, attributes) {
+			if (err) {
+				// Handle error
+			} else {
+				// Do something with attributes
+			}
+		});
+
+		AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+			IdentityPoolId : idpoolid, // your identity pool id here
+			IdentityId: AWS.config.credentials.identityId,
+			Logins : { 
+				'cognito-idp.us-east-2.amazonaws.com/us-east-2_ortRoFV5S' : session.getIdToken().getJwtToken()
+			} 
+		});
+		
+		
+		
+		AWS.config.credentials.refresh((error) => {
+			if (error) {
+				 console.error(error);
+			} else {
+			
+				var params = { 
+				  // The key is the parameter name, as it is defined in the API in API Gateway. 
+					"IdentityId": AWS.config.credentials.identityId,
+					"Logins": { 
+						'cognito-idp.us-east-2.amazonaws.com/us-east-2_ortRoFV5S' : jwt 
+					}
+				};
+				var cognitoidentity = new AWS.CognitoIdentity({apiVersion: '2014-06-30'});
+				cognitoidentity.getCredentialsForIdentity(params, function(err, data) {
+				  if (err) {
+				  
+					console.log(err, err.stack); // an error occurred
+				  }
+				  else {
+				  
+					var params = { 
+					  // The key is the parameter name, as it is defined in the API in API Gateway.
+					  param0: '' 
+					};
+
+					var body = 
+					{ 
+					  "messages": [ 
+						{ 
+							"unstructured": {
+								"id":"5",
+								"text":"hi there",
+								"timestamp": "02-22-2018 03:09:00PM" 
+							}  
+						}
+					  ]
+					} ;
+
+					var additionalParams = { 
+					  headers: { },
+					  queryParams: {
+						param0: 'c'
+					  }
+					};
+					apigClient = apigClientFactory.newClient( { 
+						accessKey: AWS.config.credentials.accessKeyId, 
+						secretKey: AWS.config.credentials.secretAccessKey,
+						sessionToken: AWS.config.credentials.sessionToken, 
+						region: 'us-east-2' 
+						//apiKey: 'T2Vze1JGGS7Kgg86l496m9KgV0jT1wJX65wHuDuh', 
+					}  ); 
+					 
+				  }
+				}); 
+				//where apigclient.post used to be called 
+			}
+		});
+		
+		
+	});
+	
+}    
+
+
+$(function() {
+	var INDEX = 0;  
+	function getResponse(msg) {
+		var response = "Couldn't get a response, sorry! Try to login first in /login.html"; 
+		if (apigClient == null) {
+			generate_message(response, 'user'); 
+			return response; 
+		} 
+		var body =  
+			{ 
+			  "messages": [ 
+				{ 
+					"unstructured": {
+						"id": sessionStorage.userID,
+						"text": msg, 
+						"timestamp": "02-22-2018 03:09:00PM" 
+					}  
+				}
+			  ]
+			} ;
+		var params = {}; 
+		var additionalParams = {  headers: { }, queryParams: {  } };
+		apigClient.chatbotPost(params, body, additionalParams) 
+			.then(function(result){ 
+				console.log("chatbot response:"); 
+				console.log(result.data.messages[0].unstructured.text);
+				response = result.data.messages[0].unstructured.text; 
+				generate_message(response, 'user'); 
+			}).catch( function(result){
+				console.log("ERROR: ");
+				console.log(result);  
+				response = result; 
+				generate_message(response, 'user'); 
+			});
+		return response; 
+	};
+  
+  
+  
+  
+  $("#chat-submit").click(function(e) {
+    e.preventDefault();
+    var msg = $("#chat-input").val(); 
+    if(msg.trim() == ''){
+       return false;
+    }
+    generate_message(msg, 'self');
+    var buttons = [
+        {
+          name: 'Existing User',
+          value: 'existing'
+        },
+        {
+          name: 'New User',
+          value: 'new'
+        }
+      ];
+	
+    setTimeout(function() {   
+		getResponse(msg);   
+    }, 1000)
+    
+  })
+  
+  function generate_message(msg, type) {
+    INDEX++;
+    var str="";
+    str += "<div id='cm-msg-"+INDEX+"' class=\"chat-msg "+type+"\">";
+    str += "          <span class=\"msg-avatar\">";
+    str += "            <img src=\"https:\/\/image.crisp.im\/avatar\/operator\/196af8cc-f6ad-4ef7-afd1-c45d5231387c\/240\/?1483361727745\">";
+    str += "          <\/span>";
+    str += "          <div class=\"cm-msg-text\">";
+    str += msg;
+    str += "          <\/div>";
+    str += "        <\/div>";
+    $(".chat-logs").append(str);
+    $("#cm-msg-"+INDEX).hide().fadeIn(300);
+    if(type == 'self'){
+     $("#chat-input").val(''); 
+    }    
+    $(".chat-logs").stop().animate({ scrollTop: $(".chat-logs")[0].scrollHeight}, 1000);    
+  }  
+  
+  function generate_button_message(msg, buttons){    
+    /* Buttons should be object array 
+      [
+        {
+          name: 'Existing User',
+          value: 'existing'
+        },
+        {
+          name: 'New User',
+          value: 'new'
+        }
+      ]
+    */
+    INDEX++;
+    var btn_obj = buttons.map(function(button) {
+       return  "              <li class=\"button\"><a href=\"javascript:;\" class=\"btn btn-primary chat-btn\" chat-value=\""+button.value+"\">"+button.name+"<\/a><\/li>";
+    }).join('');
+    var str="";
+    str += "<div id='cm-msg-"+INDEX+"' class=\"chat-msg user\">";
+    str += "          <span class=\"msg-avatar\">";
+    str += "            <img src=\"https:\/\/image.crisp.im\/avatar\/operator\/196af8cc-f6ad-4ef7-afd1-c45d5231387c\/240\/?1483361727745\">";
+    str += "          <\/span>";
+    str += "          <div class=\"cm-msg-text\">";
+    str += msg;
+    str += "          <\/div>";
+    str += "          <div class=\"cm-msg-button\">";
+    str += "            <ul>";   
+    str += btn_obj;
+    str += "            <\/ul>";
+    str += "          <\/div>";
+    str += "        <\/div>";
+    $(".chat-logs").append(str);
+    $("#cm-msg-"+INDEX).hide().fadeIn(300);   
+    $(".chat-logs").stop().animate({ scrollTop: $(".chat-logs")[0].scrollHeight}, 1000);
+    $("#chat-input").attr("disabled", true);
+  }
+  
+  $(document).delegate(".chat-btn", "click", function() {
+    var value = $(this).attr("chat-value");
+    var name = $(this).html();
+    $("#chat-input").attr("disabled", false);
+    generate_message(name, 'self');
+  })
+  
+  $("#chat-circle").click(function() {    
+    $("#chat-circle").toggle('scale');
+    $(".chat-box").toggle('scale');
+  })
+  
+  $(".chat-box-toggle").click(function() {
+    $("#chat-circle").toggle('scale');
+    $(".chat-box").toggle('scale');
+  })
+  
+	console.log("user id in session storage: " + sessionStorage.userID); 
+	function getContacts() {
+		console.log("Get contacts called. " + sessionStorage.userID); 
+		var response = "Couldn't load your info sorry! Try to login first in /login.html"; 
+		if (apigClient == null) {
+			console.log(response); 
+			//generate_message(response, 'user'); 
+			return response; 
+		} 
+		var body =  
+			{ 
+			  "messages": [ 
+				{ 
+					"unstructured": {
+						"id": sessionStorage.userID, 
+						"text": {"userID": sessionStorage.userID }, 
+						"timestamp": "02-22-2018 03:09:00PM" 
+					}  
+				}
+			  ]
+			} ;  
+			
+		console.log(body); 
+		var additionalParams = {headers: { }, queryParams: { }};
+		apigClient.getcontactsPost({}, body, additionalParams) 
+			.then(function(result){ 
+				console.log("HERE IS THE RESULT:"); 
+				console.log(result.data.messages[0].unstructured.text);
+				response = result.data.messages[0].unstructured.text; 
+				draw(response); 
+				//response is nodes variable for d3
+			}).catch( function(result){
+				console.log("ERROR: ");
+				console.log(result);  
+				response = result; 
+				
+			});
+		return response; 
+	}; 
+	
+	setTimeout(function() {   
+		getContacts(); 
+    }, 1000)
+});
+
+</script> 
+<body> 
+
+</html> 

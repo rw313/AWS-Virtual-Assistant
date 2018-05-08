@@ -53,7 +53,7 @@ apigClientFactory.newClient = function (config) {
 
     
     // extract endpoint and path from url
-    var invokeUrl = 'https://gm97zcl44m.execute-api.us-east-2.amazonaws.com/beta3';
+    var invokeUrl = 'https://gm97zcl44m.execute-api.us-east-2.amazonaws.com/beta5';
     var endpoint = /(^https?:\/\/[^\/]+)/g.exec(invokeUrl)[1];
     var pathComponent = invokeUrl.substring(endpoint.length);
 
@@ -155,6 +155,24 @@ apigClientFactory.newClient = function (config) {
     };
     
     
+    apigClient.getcontactsPut = function (params, body, additionalParams) {
+        if(additionalParams === undefined) { additionalParams = {}; }
+        
+        apiGateway.core.utils.assertParametersDefined(params, ['body'], ['body']);
+        
+        var getcontactsPutRequest = {
+            verb: 'put'.toUpperCase(),
+            path: pathComponent + uritemplate('/getcontacts').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+            headers: apiGateway.core.utils.parseParametersToObject(params, []),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
+            body: body
+        };
+        
+        
+        return apiGatewayClient.makeRequest(getcontactsPutRequest, authType, additionalParams, config.apiKey);
+    };
+    
+    
     apigClient.getcontactsPost = function (params, body, additionalParams) {
         if(additionalParams === undefined) { additionalParams = {}; }
         
@@ -188,6 +206,60 @@ apigClientFactory.newClient = function (config) {
         
         
         return apiGatewayClient.makeRequest(getcontactsOptionsRequest, authType, additionalParams, config.apiKey);
+    };
+    
+    
+    apigClient.googlesearchPut = function (params, body, additionalParams) {
+        if(additionalParams === undefined) { additionalParams = {}; }
+        
+        apiGateway.core.utils.assertParametersDefined(params, ['body'], ['body']);
+        
+        var googlesearchPutRequest = {
+            verb: 'put'.toUpperCase(),
+            path: pathComponent + uritemplate('/googlesearch').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+            headers: apiGateway.core.utils.parseParametersToObject(params, []),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
+            body: body
+        };
+        
+        
+        return apiGatewayClient.makeRequest(googlesearchPutRequest, authType, additionalParams, config.apiKey);
+    };
+    
+    
+    apigClient.googlesearchPost = function (params, body, additionalParams) {
+        if(additionalParams === undefined) { additionalParams = {}; }
+        
+        apiGateway.core.utils.assertParametersDefined(params, ['body'], ['body']);
+        
+        var googlesearchPostRequest = {
+            verb: 'post'.toUpperCase(),
+            path: pathComponent + uritemplate('/googlesearch').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+            headers: apiGateway.core.utils.parseParametersToObject(params, []),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
+            body: body
+        };
+        
+        
+        return apiGatewayClient.makeRequest(googlesearchPostRequest, authType, additionalParams, config.apiKey);
+    };
+    
+    
+    apigClient.googlesearchOptions = function (params, body, additionalParams) {
+        if(additionalParams === undefined) { additionalParams = {}; }
+        
+        apiGateway.core.utils.assertParametersDefined(params, [], ['body']);
+        
+        var googlesearchOptionsRequest = {
+            verb: 'options'.toUpperCase(),
+            path: pathComponent + uritemplate('/googlesearch').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+            headers: apiGateway.core.utils.parseParametersToObject(params, []),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
+            body: body
+        };
+        
+        
+        return apiGatewayClient.makeRequest(googlesearchOptionsRequest, authType, additionalParams, config.apiKey);
     };
     
     
